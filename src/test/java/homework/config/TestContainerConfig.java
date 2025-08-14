@@ -1,33 +1,53 @@
-package homework.dao;
+package homework.config;
 
 
+import homework.entity.User;
+import lombok.Getter;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.util.Properties;
 
 @Testcontainers
 public class TestContainerConfig {
 
-    private SessionFactory sessionFactory;
+    @Getter
+    private final static SessionFactory sessionFactory;
 
     @Container
-    private static final PostgreSQLContainer<?> postgreSQLContainer =
-            new PostgreSQLContainer<>("user-service-test-dao")
-                    .withDatabaseName("test_database")
-                    .withUsername("postgres")
-                    .withPassword("postgres")
-                    .withExposedPorts(5432);
+    private static final PostgreSQLContainer<?> postgreSQLContainer;
 
     static {
-        postgreSQLContainer.start();
+        try {
+            Properties properties = new Properties();
+            properties.load(HibernateConfig.class.getResourceAsStream("/hibernate-test.properties"));
 
-        Configuration cfg = new Configuration();
+            postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
+                    .withDatabaseName(properties.getProperty("testcontainers.databaseName"))
+                    .withUsername(properties.getProperty("hibernate.connection.username"))
+                    .withPassword(properties.getProperty("hibernate.connection.password"))
+                    .withExposedPorts(5432);
+            postgreSQLContainer.start();
+
+            Configuration configuration = new Configuration();
+            configuration.addProperties(properties);
+
+            configuration.setProperty("hibernate.connection.url", postgreSQLContainer.getJdbcUrl());
+            configuration.addAnnotatedClass(User.class);
+
+            sessionFactory = configuration.buildSessionFactory();
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
+    public static void stop() {
+        if (sessionFactory != null) {
+            sessionFactory.close();
+        }
+        postgreSQLContainer.stop();
+    }
 }
