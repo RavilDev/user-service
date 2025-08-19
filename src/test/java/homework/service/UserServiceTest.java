@@ -45,8 +45,10 @@ public class UserServiceTest {
         when(userMapperMock.toUserResponseTo(user)).thenReturn(userResponseTo);
         List<UserResponseTo> allUsers = userService.getAllUsers();
 
-        assertNotNull(allUsers);
-        assertEquals(allUsers.size(), users.size());
+        assertAll("Проверка результата getAllUsers",
+                () -> assertNotNull(allUsers),
+                () -> assertEquals(users.size(), allUsers.size())
+        );
     }
 
     @Test
@@ -61,10 +63,13 @@ public class UserServiceTest {
 
         assertNotNull(userById);
 
-        assertEquals(userById.getName(), userResponseTo.getName());
-        assertEquals(userById.getAge(), userResponseTo.getAge());
-        assertEquals(userById.getEmail(), userResponseTo.getEmail());
-        assertEquals(userById.getCreatedAt(), userResponseTo.getCreatedAt());
+        assertAll("Проверка результата getUserById",
+                () -> assertNotNull(userById),
+                () -> assertEquals(userResponseTo.getName(), userById.getName()),
+                () -> assertEquals(userResponseTo.getAge(), userById.getAge()),
+                () -> assertEquals(userResponseTo.getEmail(), userById.getEmail()),
+                () -> assertEquals(userResponseTo.getCreatedAt(), userById.getCreatedAt())
+        );
     }
 
     @Test
