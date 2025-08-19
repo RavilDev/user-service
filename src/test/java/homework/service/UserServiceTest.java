@@ -1,14 +1,16 @@
 package homework.service;
 
-import homework.dao.UserDao;
+import homework.dto.request.UserRequestTo;
+import homework.dto.response.UserResponseTo;
 import homework.entity.User;
+import homework.mapper.UserMapper;
+import homework.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -16,29 +18,32 @@ import java.util.Optional;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
+import static homework.util.DataUtil.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
     @Mock
-    private UserDao userDaoMock;
+    private UserRepository userRepositoryMock;
+
+    @Mock
+    private UserMapper userMapperMock;
 
     @InjectMocks
     private UserService userService;
 
     @Test
     public void testGetAllUsers() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setName("Ravil");
-        user.setAge(23);
-        user.setEmail("@eagle");
-        user.setCreatedAt(created);
+        User user = getUser();
+
+        UserResponseTo userResponseTo = getUserResponseTo();
+
         List<User> users = new ArrayList<>();
         users.add(user);
 
-        when(userDaoMock.getUsers()).thenReturn(users);
-        List<User> allUsers = userService.getAllUsers();
+        when(userRepositoryMock.findAll()).thenReturn(users);
+        when(userMapperMock.toUserResponseTo(user)).thenReturn(userResponseTo);
+        List<UserResponseTo> allUsers = userService.getAllUsers();
 
         assertNotNull(allUsers);
         assertEquals(allUsers.size(), users.size());
@@ -46,144 +51,93 @@ public class UserServiceTest {
 
     @Test
     public void testGetUserById() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setId(1L);
-        user.setName("Ravil");
-        user.setAge(23);
-        user.setEmail("@eagle");
-        user.setCreatedAt(created);
+        User user = getUser();
 
-        when(userDaoMock.getUserById(1L)).thenReturn(Optional.of(user));
-        User userById = userService.getUserById(1L);
+        UserResponseTo userResponseTo = getUserResponseTo();
+
+        when(userMapperMock.toUserResponseTo(user)).thenReturn(userResponseTo);
+        when(userRepositoryMock.findById(ID)).thenReturn(Optional.of(user));
+        UserResponseTo userById = userService.getUserById(ID);
 
         assertNotNull(userById);
 
-        assertEquals(userById.getName(), user.getName());
-        assertEquals(userById.getAge(), user.getAge());
-        assertEquals(userById.getEmail(), user.getEmail());
-        assertEquals(userById.getCreatedAt(), user.getCreatedAt());
+        assertEquals(userById.getName(), userResponseTo.getName());
+        assertEquals(userById.getAge(), userResponseTo.getAge());
+        assertEquals(userById.getEmail(), userResponseTo.getEmail());
+        assertEquals(userById.getCreatedAt(), userResponseTo.getCreatedAt());
     }
 
     @Test
     public void testGetUserByIdThrowsException() {
+        when(userRepositoryMock.findById(ID)).thenReturn(Optional.empty());
+
         IllegalArgumentException thrown = assertThrows(
                 IllegalArgumentException.class,
-                () -> userService.getUserById(-1L),
-                "Ожидалось исключение IllegalArgumentException при попытке передать отрицательный id");
-        assertTrue(thrown.getMessage().contains("ID должен быть положительным числом"));
+                () -> userService.getUserById(ID),
+                "Ожидалось исключение IllegalArgumentException при попытке передать id отсутствующего пользователя");
+        assertTrue(thrown.getMessage().contains("Пользователь с ID 1 не найден"));
     }
 
     @Test
     public void testAddUser() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setId(1L);
-        user.setName("Ravil");
-        user.setAge(23);
-        user.setEmail("@eagle");
-        user.setCreatedAt(created);
+        User user = getUser();
 
-        userService.addUser(user);
+        UserRequestTo userRequestTo = getUserRequestTo();
 
-        verify(userDaoMock).saveUser(user);
-    }
+        when(userMapperMock.toUser(userRequestTo)).thenReturn(user);
 
-    @Test
-    void testAddUserWithNullUser() {
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> userService.addUser(null));
-        assertEquals("Пользователь не может быть null", thrown.getMessage());
-    }
+        userService.addUser(userRequestTo);
 
-    @Test
-    void testAddUserWithEmptyName() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setId(1L);
-        user.setName(" ");
-        user.setAge(23);
-        user.setEmail("@eagle");
-        user.setCreatedAt(created);
-
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> userService.addUser(user));
-        assertEquals("Имя пользователя не может быть пустым", thrown.getMessage());
-    }
-
-    @Test
-    void testAddUserWithInvalidEmail() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setId(1L);
-        user.setName("Ravil");
-        user.setAge(23);
-        user.setEmail("eagle");
-        user.setCreatedAt(created);
-
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> userService.addUser(user));
-        assertEquals("Некорректный email", thrown.getMessage());
-    }
-
-    @Test
-    void testAddUserWithInvalidAge() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setId(1L);
-        user.setName("Ravil");
-        user.setAge(-23);
-        user.setEmail("@eagle");
-        user.setCreatedAt(created);
-
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> userService.addUser(user));
-        assertEquals("Возраст должен быть положительным числом", thrown.getMessage());
+        verify(userRepositoryMock).save(user);
     }
 
     @Test
     public void testUpdateUser() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setId(1L);
-        user.setName("Ravil");
-        user.setAge(23);
-        user.setEmail("@eagle");
-        user.setCreatedAt(created);
+        User user = getUser();
 
-        userService.updateUser(user);
+        UserRequestTo userRequestTo = getUserRequestTo();
 
-        verify(userDaoMock).updateUser(user);
+        UserResponseTo userResponseTo = getUserResponseTo();
+
+        when(userRepositoryMock.findById(ID)).thenReturn(Optional.of(user));
+        when(userMapperMock.toUserResponseTo(user)).thenReturn(userResponseTo);
+
+        userService.updateUser(ID, userRequestTo);
+
+        verify(userRepositoryMock).save(user);
+    }
+
+    @Test
+    public void testUpdateUserThrownException() {
+        UserRequestTo userRequestTo = getUserRequestTo();
+
+        when(userRepositoryMock.findById(ID)).thenReturn(Optional.empty());
+
+        IllegalArgumentException thrown = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateUser(ID, userRequestTo),
+                "Ожидалось исключение IllegalArgumentException при попытке передать id отсутствующего пользователя"
+        );
+        assertEquals("Пользователь с ID 1 не найден", thrown.getMessage());
     }
 
     @Test
     public void testDeleteUser() {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User user = new User();
-        user.setId(1L);
-        user.setName("Ravil");
-        user.setAge(23);
-        user.setEmail("@eagle");
-        user.setCreatedAt(created);
+        User user = getUser();
 
-        when(userDaoMock.getUserById(user.getId())).thenReturn(Optional.of(user));
+        when(userRepositoryMock.findById(user.getId())).thenReturn(Optional.of(user));
         userService.deleteUser(user.getId());
 
-        verify(userDaoMock).deleteUser(user);
+        verify(userRepositoryMock).delete(user);
     }
 
     @Test
     public void testDeleteUserThrowsException() {
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.deleteUser(-1L),
-                "Ожидалось исключение IllegalArgumentException при попытке передать отрицательный id");
-        assertTrue(thrown.getMessage().contains("ID должен быть положительным числом"));
-    }
-
-    @Test
-    public void testDeleteUserNullThrowsException() {
-        when(userDaoMock.getUserById(1L)).thenReturn(Optional.empty());
+        when(userRepositoryMock.findById(ID)).thenReturn(Optional.empty());
 
         IllegalArgumentException thrown = assertThrows(
                 IllegalArgumentException.class,
-                () -> userService.deleteUser(1L),
+                () -> userService.deleteUser(ID),
                 "Ожидалось исключение IllegalArgumentException при попытке передать id отсутствующего пользователя"
                 );
         assertEquals("Пользователь с ID 1 не найден", thrown.getMessage());
