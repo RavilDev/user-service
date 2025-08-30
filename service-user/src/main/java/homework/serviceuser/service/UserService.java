@@ -2,57 +2,17 @@ package homework.serviceuser.service;
 
 import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
-import homework.serviceuser.entity.User;
-import homework.serviceuser.mapper.UserMapper;
-import homework.serviceuser.repository.UserRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.util.List;
-import java.util.Optional;
 
-@Service
-@AllArgsConstructor
-public class UserService {
-    private final UserRepository userRepository;
+public interface UserService {
+    List<UserResponseTo> getAllUsers();
 
-    private final UserMapper userMapper;
+    UserResponseTo getUserById(Long id);
 
-    public List<UserResponseTo> getAllUsers() {
-        return userRepository.findAll().stream().map(userMapper::toUserResponseTo).toList();
-    }
+    UserResponseTo addUser(UserRequestTo userRequestTo);
 
-    public UserResponseTo getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь с ID " + id + " не найден"));
-        return userMapper.toUserResponseTo(user);
-    }
+    UserResponseTo updateUser(Long id, UserRequestTo userRequestTo);
 
-    public UserResponseTo addUser(UserRequestTo userRequestTo) {
-        Timestamp created = new Timestamp(System.currentTimeMillis());
-        User createdUser = userMapper.toUser(userRequestTo);
-        createdUser.setCreatedAt(created);
-        createdUser = userRepository.save(createdUser);
-        return userMapper.toUserResponseTo(createdUser);
-    }
-
-    public UserResponseTo updateUser(Long id, UserRequestTo userRequestTo) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь с ID " + id + " не найден"));
-
-        existingUser.setName(userRequestTo.getName());
-        existingUser.setEmail(userRequestTo.getEmail());
-        existingUser.setAge(userRequestTo.getAge());
-
-        userRepository.save(existingUser);
-        return userMapper.toUserResponseTo(existingUser);
-    }
-
-    public void deleteUser(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        userRepository.delete(user
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь с ID " + id + " не найден")));
-    }
-
+    void deleteUser(Long id);
 }

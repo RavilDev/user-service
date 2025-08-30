@@ -22,11 +22,6 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponseTo>> getAllUsers() {
         List<UserResponseTo> users = userService.getAllUsers();
-        if (users.isEmpty()) {
-            return ResponseEntity
-                    .noContent()
-                    .build();
-        }
         return ResponseEntity
                 .ok(users);
     }
@@ -36,11 +31,6 @@ public class UserController {
             @PathVariable @Positive(message = "ID должен быть положительным числом") Long id
     ) {
         UserResponseTo userById = userService.getUserById(id);
-        if (userById == null) {
-            return ResponseEntity
-                    .notFound()
-                    .build();
-        }
         return ResponseEntity
                 .ok(userById);
     }

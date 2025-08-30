@@ -1,6 +1,8 @@
 package homework.serviceuser.handler;
 
+import homework.serviceuser.exception.UserNotFoundException;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,6 +22,15 @@ public class UserServiceExceptionHandler {
                 .orElse("Validation failed");
 
         return ResponseEntity.badRequest()
+                .body(Collections.singletonMap("message", errorMessage));
+    }
+
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleNotFoundException(UserNotFoundException ex) {
+        String errorMessage = ex.getMessage();
+        return ResponseEntity.
+                status(HttpStatus.NOT_FOUND)
                 .body(Collections.singletonMap("message", errorMessage));
     }
 }

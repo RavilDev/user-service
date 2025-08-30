@@ -3,7 +3,7 @@ package homework.serviceuser.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
-import homework.serviceuser.service.UserService;
+import homework.serviceuser.service.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,7 +28,7 @@ public class UserControllerTest {
     private MockMvc mvc;
 
     @MockitoBean
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Test
     public void testGetAllUsers() throws Exception {

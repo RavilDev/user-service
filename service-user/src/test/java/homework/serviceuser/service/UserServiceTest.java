@@ -3,6 +3,7 @@ package homework.serviceuser.service;
 import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
 import homework.serviceuser.entity.User;
+import homework.serviceuser.exception.UserNotFoundException;
 import homework.serviceuser.mapper.UserMapper;
 import homework.serviceuser.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ public class UserServiceTest {
     private UserMapper userMapperMock;
 
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Test
     public void testGetAllUsers() {
@@ -76,8 +77,8 @@ public class UserServiceTest {
     public void testGetUserByIdThrowsException() {
         when(userRepositoryMock.findById(ID)).thenReturn(Optional.empty());
 
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
+        UserNotFoundException thrown = assertThrows(
+                UserNotFoundException.class,
                 () -> userService.getUserById(ID),
                 "Ожидалось исключение IllegalArgumentException при попытке передать id отсутствующего пользователя");
         assertTrue(thrown.getMessage().contains("Пользователь с ID 1 не найден"));
@@ -118,8 +119,8 @@ public class UserServiceTest {
 
         when(userRepositoryMock.findById(ID)).thenReturn(Optional.empty());
 
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
+        UserNotFoundException thrown = assertThrows(
+                UserNotFoundException.class,
                 () -> userService.updateUser(ID, userRequestTo),
                 "Ожидалось исключение IllegalArgumentException при попытке передать id отсутствующего пользователя"
         );
@@ -140,8 +141,8 @@ public class UserServiceTest {
     public void testDeleteUserThrowsException() {
         when(userRepositoryMock.findById(ID)).thenReturn(Optional.empty());
 
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
+        UserNotFoundException thrown = assertThrows(
+                UserNotFoundException.class,
                 () -> userService.deleteUser(ID),
                 "Ожидалось исключение IllegalArgumentException при попытке передать id отсутствующего пользователя"
                 );
