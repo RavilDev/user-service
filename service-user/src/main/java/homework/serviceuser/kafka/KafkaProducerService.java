@@ -1,6 +1,6 @@
 package homework.serviceuser.kafka;
 
-import homework.serviceuser.dto.notification.UserMessageTo;
+import homework.common.dto.UserMessageTo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;

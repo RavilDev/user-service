@@ -1,4 +1,4 @@
-package homework.servicenotification.dto;
+package homework.common.dto;
 
 import lombok.*;
 

@@ -4,6 +4,7 @@ import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
 import homework.serviceuser.entity.User;
 import homework.serviceuser.exception.UserNotFoundException;
+import homework.serviceuser.kafka.KafkaProducerService;
 import homework.serviceuser.mapper.UserMapper;
 import homework.serviceuser.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ public class UserServiceTest {
 
     @Mock
     private UserMapper userMapperMock;
+
+    @Mock
+    private KafkaProducerService kafkaProducerService;
 
     @InjectMocks
     private UserServiceImpl userService;

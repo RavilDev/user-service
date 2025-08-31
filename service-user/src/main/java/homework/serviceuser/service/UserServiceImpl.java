@@ -1,6 +1,6 @@
 package homework.serviceuser.service;
 
-import homework.serviceuser.dto.notification.UserMessageTo;
+import homework.common.dto.UserMessageTo;
 import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
 import homework.serviceuser.entity.User;
