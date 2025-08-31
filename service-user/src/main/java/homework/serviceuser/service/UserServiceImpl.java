@@ -1,9 +1,11 @@
 package homework.serviceuser.service;
 
+import homework.serviceuser.dto.notification.UserMessageTo;
 import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
 import homework.serviceuser.entity.User;
 import homework.serviceuser.exception.UserNotFoundException;
+import homework.serviceuser.kafka.KafkaProducerService;
 import homework.serviceuser.mapper.UserMapper;
 import homework.serviceuser.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -17,7 +19,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
+    private final KafkaProducerService kafkaProducerService;
     private final UserMapper userMapper;
 
     @Override
@@ -34,6 +36,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseTo addUser(UserRequestTo userRequestTo) {
+        sendMessage("CREATE", userRequestTo.getEmail());
+
         Timestamp created = new Timestamp(System.currentTimeMillis());
         User createdUser = userMapper.toUser(userRequestTo);
         createdUser.setCreatedAt(created);
@@ -57,8 +61,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long id) {
         Optional<User> user = userRepository.findById(id);
-        userRepository.delete(user
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с ID " + id + " не найден")));
+        User userElseThrow = user.orElseThrow(() -> new UserNotFoundException("Пользователь с ID " + id + " не найден"));
+
+        sendMessage("DELETE", userElseThrow.getEmail());
+
+        userRepository.delete(userElseThrow);
+    }
+
+    private void sendMessage(String operation, String email) {
+        UserMessageTo message = UserMessageTo.builder()
+                .operation(operation)
+                .email(email)
+                .build();
+        kafkaProducerService.sendMessage(message);
     }
 
 }
