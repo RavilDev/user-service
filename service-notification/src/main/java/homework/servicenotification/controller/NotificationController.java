@@ -19,7 +19,9 @@ public class NotificationController {
 
     @PostMapping("/notifications")
     public String sendNotification(@RequestBody UserMessageTo messageTo) {
-        String subject = "CREATE".equals(messageTo.getOperation()) ? "Добро пожаловать!" : "Аккаунт удалён";
+        String subject = "CREATE".equals(messageTo.getOperation()) ?
+                "Аккаунт создан!" :
+                "Аккаунт удалён";
         String text = "CREATE".equals(messageTo.getOperation()) ?
                 "Здравствуйте! Ваш аккаунт на сайте ваш сайт был успешно создан." :
                 "Здравствуйте! Ваш аккаунт был удалён.";

@@ -22,7 +22,7 @@ public class KafkaConsumerService {
         String text;
 
         if ("CREATE".equals(message.getOperation())) {
-            subject = "Аккаунт создан !";
+            subject = "Аккаунт создан!";
             text = "Здравствуйте! Ваш аккаунт на сайте был успешно создан.";
         } else if ("DELETE".equals(message.getOperation())) {
             subject = "Аккаунт удалён";
