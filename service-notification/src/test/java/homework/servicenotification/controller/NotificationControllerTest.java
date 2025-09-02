@@ -22,7 +22,6 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,7 +96,7 @@ public class NotificationControllerTest {
         MimeMessage email = receivedMessages[0];
         assertEquals("test@example.com", email.getAllRecipients()[0].toString());
         assertEquals("Аккаунт создан!", email.getSubject());
-        assertEquals("Здравствуйте! Ваш аккаунт на сайте ваш сайт был успешно создан.", email.getContent().toString().trim());
+        assertEquals("Здравствуйте! Ваш аккаунт на сайте был успешно создан.", email.getContent().toString().trim());
         assertEquals("test", email.getFrom()[0].toString());
     }
 

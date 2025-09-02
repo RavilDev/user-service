@@ -18,6 +18,14 @@ public class KafkaConsumerService {
 
     @KafkaListener(topics = "${kafka.topic.user-events}")
     public void consume(UserMessageTo message) {
+        try {
+            sendEmail(message);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    public void sendEmail(UserMessageTo message) {
         String subject;
         String text;
 
