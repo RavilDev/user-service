@@ -1,6 +1,7 @@
 package homework.servicenotification.controller;
 
 import homework.common.dto.UserMessageTo;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -18,7 +19,8 @@ public class NotificationController {
     private String mailFrom;
 
     @PostMapping("/notifications")
-    public String sendNotification(@RequestBody UserMessageTo messageTo) {
+    public String sendNotification(
+            @Valid @RequestBody UserMessageTo messageTo) {
         String subject = "CREATE".equals(messageTo.getOperation()) ?
                 "Аккаунт создан!" :
                 "Аккаунт удалён";

@@ -6,6 +6,7 @@ import com.icegreen.greenmail.util.ServerSetup;
 import homework.common.dto.UserMessageTo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,7 +46,7 @@ public class NotificationControllerTest {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
-        registry.add("spring.mail.host", greenMailContainer::getHost);
+        registry.add("spring.mail.host", () -> "localhost");
         registry.add("spring.mail.port", () -> greenMailContainer.getMappedPort(3025));
         registry.add("spring.mail.username", () -> "test");
         registry.add("spring.mail.password", () -> "test");
@@ -66,8 +68,15 @@ public class NotificationControllerTest {
         greenMail.start();
     }
 
+    @AfterEach
+    void tearDown() {
+        if (greenMail != null) {
+            greenMail.stop();
+        }
+    }
+
     @Test
-    void sendNotificationTest() throws MessagingException, IOException {
+    void sendNotificationCreateOperationTest() throws MessagingException, IOException {
         UserMessageTo messageTo = UserMessageTo.builder()
                 .operation("CREATE")
                 .email("test@example.com")
@@ -90,6 +99,55 @@ public class NotificationControllerTest {
         assertEquals("Аккаунт создан!", email.getSubject());
         assertEquals("Здравствуйте! Ваш аккаунт на сайте ваш сайт был успешно создан.", email.getContent().toString().trim());
         assertEquals("test", email.getFrom()[0].toString());
+    }
+
+    @Test
+    void sendNotificationDeleteOperationTest() throws Exception {
+        UserMessageTo messageTo = UserMessageTo.builder()
+                .operation("DELETE")
+                .email("test@example.com")
+                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<UserMessageTo> request = new HttpEntity<>(messageTo, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/notifications", request, String.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Email sent to test@example.com", response.getBody());
+
+        boolean emailReceived = greenMail.waitForIncomingEmail(15000, 1);
+        assertTrue(emailReceived, "Email was not received within 15 seconds");
+        MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
+        assertEquals(1, receivedMessages.length, "Expected exactly one email, but got " + receivedMessages.length);
+        MimeMessage email = receivedMessages[0];
+        assertEquals("test@example.com", email.getAllRecipients()[0].toString());
+        assertEquals("Аккаунт удалён", email.getSubject());
+        assertEquals("Здравствуйте! Ваш аккаунт был удалён.", email.getContent().toString().trim());
+        assertEquals("test", email.getFrom()[0].toString());
+    }
+
+    @Test
+    void sendNotificationThrowsException() {
+        UserMessageTo messageTo = UserMessageTo.builder()
+                .operation("CREATE")
+                .email("invalid-email")
+                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<UserMessageTo> request = new HttpEntity<>(messageTo, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/notifications", request, String.class
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody(), "Response body should not be null");
+
+        MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
+        assertEquals(0, receivedMessages.length, "No email should be sent for invalid email, but got " + receivedMessages.length);
     }
 
 }

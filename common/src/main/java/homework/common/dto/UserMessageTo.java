@@ -1,5 +1,6 @@
 package homework.common.dto;
 
+import jakarta.validation.constraints.Email;
 import lombok.*;
 
 @Getter
@@ -9,5 +10,6 @@ import lombok.*;
 @AllArgsConstructor
 public class UserMessageTo {
     private String operation;
+    @Email(message = "Некорректный email")
     private String email;
 }
