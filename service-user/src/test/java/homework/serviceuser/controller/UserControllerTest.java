@@ -3,15 +3,13 @@ package homework.serviceuser.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
-import homework.serviceuser.service.UserServiceImpl;
+import homework.serviceuser.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.ArrayList;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -28,7 +26,7 @@ public class UserControllerTest {
     private MockMvc mvc;
 
     @MockitoBean
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @Test
     public void testGetAllUsers() throws Exception {
@@ -36,21 +34,12 @@ public class UserControllerTest {
 
         mvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(COUNT))
-                .andExpect(jsonPath("$[0].id").value(ID))
-                .andExpect(jsonPath("$[0].name").value(NAME))
-                .andExpect(jsonPath("$[0].age").value(AGE))
-                .andExpect(jsonPath("$[0].email").value(EMAIL));
+                .andExpect(jsonPath("$._embedded.userResponseToList.length()").value(COUNT))
+                .andExpect(jsonPath("$._embedded.userResponseToList[0].id").value(ID))
+                .andExpect(jsonPath("$._embedded.userResponseToList[0].name").value(NAME))
+                .andExpect(jsonPath("$._embedded.userResponseToList[0].age").value(AGE))
+                .andExpect(jsonPath("$._embedded.userResponseToList[0].email").value(EMAIL));
     }
-
-//    @Test
-//    public void testGetAllUsersEmpty() throws Exception {
-//        when(userService.getAllUsers()).thenReturn(new ArrayList<>());
-//
-//        mvc.perform(get("/api/users"))
-//                .andExpect(status().isNoContent());
-//    }
-
 
     @Test
     public void testGetUserById() throws Exception {
