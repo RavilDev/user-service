@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -pl service-user -am -DskipTests
 
-FROM openjdk:21
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 COPY --from=build /app/service-user/target/service-user-0.0.1-SNAPSHOT.jar /app/app.jar
 EXPOSE  8081

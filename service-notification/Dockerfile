@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -pl service-notification -am -DskipTests
 
-FROM openjdk:21
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 COPY --from=build /app/service-notification/target/service-notification-0.0.1-SNAPSHOT.jar /app/app.jar
 EXPOSE  8082
