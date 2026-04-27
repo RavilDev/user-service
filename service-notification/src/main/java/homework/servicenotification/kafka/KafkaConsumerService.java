@@ -1,5 +1,6 @@
 package homework.servicenotification.kafka;
 
+import homework.servicenotification.config.KafkaTopicProperties;
 import homework.common.dto.UserMessageTo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,11 +13,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class KafkaConsumerService {
     private final JavaMailSender mailSender;
+    private final KafkaTopicProperties kafkaTopicProperties;
 
     @Value("${spring.mail.username}")
     private String mailFrom;
 
-    @KafkaListener(topics = "${kafka.topic.user-events}")
+    @KafkaListener(topics = "#{@kafkaTopicProperties.userEvents}")
     public void consume(UserMessageTo message) {
         try {
             sendEmail(message);
