@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: service-notification
+
+  config:
+    import: optional:configserver:http://external-configuration:8888
+    fail-fast: true
+    retry:
+      max-attempts: 10
+      initial-interval: 1000
+
+  main:
+    allow-bean-definition-overriding: true
