@@ -5,11 +5,12 @@ import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
 import homework.serviceuser.entity.User;
 import homework.serviceuser.exception.UserNotFoundException;
-import homework.serviceuser.kafka.KafkaProducerService;
 import homework.serviceuser.mapper.UserMapper;
+import homework.serviceuser.outbox.UserEventOutboxWriter;
 import homework.serviceuser.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final KafkaProducerService kafkaProducerService;
+    private final UserEventOutboxWriter userEventOutboxWriter;
     private final UserMapper userMapper;
 
     @Override
@@ -35,13 +36,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseTo addUser(UserRequestTo userRequestTo) {
-        sendMessage("CREATE", userRequestTo.getEmail());
-
         Timestamp created = new Timestamp(System.currentTimeMillis());
         User createdUser = userMapper.toUser(userRequestTo);
         createdUser.setCreatedAt(created);
         createdUser = userRepository.save(createdUser);
+        enqueueUserEvent("CREATE", createdUser.getEmail());
         return userMapper.toUserResponseTo(createdUser);
     }
 
@@ -59,21 +60,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long id) {
         Optional<User> user = userRepository.findById(id);
         User userElseThrow = user.orElseThrow(() -> new UserNotFoundException("Пользователь с ID " + id + " не найден"));
 
-        sendMessage("DELETE", userElseThrow.getEmail());
-
+        enqueueUserEvent("DELETE", userElseThrow.getEmail());
         userRepository.delete(userElseThrow);
     }
 
-    private void sendMessage(String operation, String email) {
+    private void enqueueUserEvent(String operation, String email) {
         UserMessageTo message = UserMessageTo.builder()
                 .operation(operation)
                 .email(email)
                 .build();
-        kafkaProducerService.sendMessage(message);
+        userEventOutboxWriter.enqueue(message);
     }
 
 }

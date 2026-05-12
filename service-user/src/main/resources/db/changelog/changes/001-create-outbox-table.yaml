@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-outbox-table
+      author: service-user
+      changes:
+        - createTable:
+            tableName: outbox
+            remarks: Transactional outbox for reliable user domain events
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: topic_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message_key
+                  type: varchar(512)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: payload
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: processed_at
+                  type: timestamptz
+                  constraints:
+                    nullable: true
+        - createIndex:
+            indexName: idx_outbox_processed_created
+            tableName: outbox
+            columns:
+              - column:
+                  name: processed_at
+              - column:
+                  name: created_at
+              - column:
+                  name: id

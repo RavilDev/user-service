@@ -2,13 +2,15 @@ package homework.serviceuser.service;
 
 import homework.serviceuser.dto.request.UserRequestTo;
 import homework.serviceuser.dto.response.UserResponseTo;
+import homework.common.dto.UserMessageTo;
 import homework.serviceuser.entity.User;
 import homework.serviceuser.exception.UserNotFoundException;
-import homework.serviceuser.kafka.KafkaProducerService;
 import homework.serviceuser.mapper.UserMapper;
+import homework.serviceuser.outbox.UserEventOutboxWriter;
 import homework.serviceuser.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,7 +34,7 @@ public class UserServiceTest {
     private UserMapper userMapperMock;
 
     @Mock
-    private KafkaProducerService kafkaProducerService;
+    private UserEventOutboxWriter userEventOutboxWriter;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -95,10 +97,15 @@ public class UserServiceTest {
         UserRequestTo userRequestTo = getUserRequestTo();
 
         when(userMapperMock.toUser(userRequestTo)).thenReturn(user);
+        when(userRepositoryMock.save(user)).thenReturn(user);
 
         userService.addUser(userRequestTo);
 
         verify(userRepositoryMock).save(user);
+        ArgumentCaptor<UserMessageTo> messageCaptor = ArgumentCaptor.forClass(UserMessageTo.class);
+        verify(userEventOutboxWriter).enqueue(messageCaptor.capture());
+        assertEquals("CREATE", messageCaptor.getValue().getOperation());
+        assertEquals(user.getEmail(), messageCaptor.getValue().getEmail());
     }
 
     @Test
@@ -139,6 +146,10 @@ public class UserServiceTest {
         userService.deleteUser(user.getId());
 
         verify(userRepositoryMock).delete(user);
+        ArgumentCaptor<UserMessageTo> messageCaptor = ArgumentCaptor.forClass(UserMessageTo.class);
+        verify(userEventOutboxWriter).enqueue(messageCaptor.capture());
+        assertEquals("DELETE", messageCaptor.getValue().getOperation());
+        assertEquals(user.getEmail(), messageCaptor.getValue().getEmail());
     }
 
     @Test
