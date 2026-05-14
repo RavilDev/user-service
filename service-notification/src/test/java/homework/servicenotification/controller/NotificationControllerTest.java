@@ -26,7 +26,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 public class NotificationControllerTest {
 
     @Container

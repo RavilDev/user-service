@@ -22,7 +22,8 @@ public class OutboxEntry {
     @Column(name = "message_key")
     private String messageKey;
 
-    @Column(name = "payload", nullable = false, columnDefinition = "text")
+    @Lob
+    @Column(name = "payload", nullable = false)
     private String payload;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
