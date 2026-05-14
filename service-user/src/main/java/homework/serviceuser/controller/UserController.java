@@ -26,7 +26,6 @@ import java.util.List;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
-    public static final String URL = "http://localhost:8080/api/users/%s";
     private final UserService userService;
 
     @Tag(name = "get", description = "GET-методы User API")
@@ -121,7 +120,9 @@ public class UserController {
 
     private EntityModel<UserResponseTo> saturateModel(UserResponseTo userResponseTo) {
         EntityModel<UserResponseTo> resource = EntityModel.of(userResponseTo);
-        resource.add(Link.of(URL.formatted(userResponseTo.getId())));
+        resource.add(WebMvcLinkBuilder
+                .linkTo(WebMvcLinkBuilder.methodOn(UserController.class).getUserById(userResponseTo.getId()))
+                .withSelfRel());
 
         Link updateLink = WebMvcLinkBuilder
                 .linkTo(WebMvcLinkBuilder.methodOn(UserController.class).updateUser(userResponseTo.getId(), null))

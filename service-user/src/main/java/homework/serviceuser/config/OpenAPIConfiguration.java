@@ -19,8 +19,7 @@ public class OpenAPIConfiguration {
     @Bean
     public OpenAPI getOpenAPI() {
         Server server = new Server();
-        String serverUrl = environment.getProperty("api.server.url");
-        server.setUrl(serverUrl);
+        server.setUrl(environment.getProperty("api.server.url", "/"));
         server.setDescription("Development");
 
         Contact myContact = new Contact();

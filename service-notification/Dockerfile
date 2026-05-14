@@ -5,6 +5,7 @@ RUN mvn clean package -pl service-notification -am -DskipTests
 
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
+ENV SERVER_PORT=8082
 COPY --from=build /app/service-notification/target/service-notification-0.0.1-SNAPSHOT.jar /app/app.jar
-EXPOSE  8082
+EXPOSE 8082
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
