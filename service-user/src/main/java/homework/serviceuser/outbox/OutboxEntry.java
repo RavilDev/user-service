@@ -3,6 +3,8 @@ package homework.serviceuser.outbox;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -22,7 +24,7 @@ public class OutboxEntry {
     @Column(name = "message_key")
     private String messageKey;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
     @Column(name = "payload", nullable = false)
     private String payload;
 
